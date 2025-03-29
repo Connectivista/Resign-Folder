@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>istifaet.com - İstifa Dilekçesi Oluştur</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --text-color: #f5f5f5;
+      --input-bg: #2a2a2a;
+      --container-bg: #1e1e1e;
+      --border-color: #555;
+      --output-bg: #2c2c2c;
+    }
+    body.light {
+      --bg-color: #f9f9f9;
+      --text-color: #222;
+      --input-bg: #fff;
+      --container-bg: #fff;
+      --border-color: #ccc;
+      --output-bg: #f2f2f2;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      transition: all 0.3s ease;
+    }
+    .container {
+      background: var(--container-bg);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      width: 100%;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      margin-top: 5px;
+    }
+    button {
+      margin-top: 25px;
+      padding: 12px;
+      width: 100%;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #output {
+      margin-top: 30px;
+      white-space: pre-line;
+      background-color: var(--output-bg);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #4CAF50;
+      color: white;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()">Tema Değiştir</button>
+  <div class="container">
+    <h1>istifaet.com</h1>
+    <label for="name">İsim Soyisim</label>
+    <input type="text" id="name" placeholder="Adınız Soyadınız" />
+    <label for="company">Şirket İsmi</label>
+    <input type="text" id="company" placeholder="Şirket Adı" />
+    <label for="date">İstifa Tarihi</label>
+    <input type="date" id="date" />
+    <button onclick="generateLetter()">İstifa Et</button>
+    <div id="output" style="display: none;"></div>
+    <div class="button-group" id="downloadButtons" style="display: none;">
+      <button onclick="downloadWord()">Word İndir</button>
+      <button onclick="downloadPDF()">PDF İndir</button>
+    </div>
+  </div>
+  <script>
+    let currentLetter = "";
+    function generateLetter() {
+      const name = document.getElementById("name").value;
+      const company = document.getElementById("company").value;
+      const date = document.getElementById("date").value;
+      if (!name || !company || !date) {
+        alert("Lütfen tüm alanları doldurunuz.");
+        return;
+      }
+      const text = `${date}\n\n${company}\n\nSayın Yetkili,\n\n${company} şirketinde görev almakta olduğum pozisyondan kişisel sebeplerim nedeniyle istifa ettiğimi bildirir, gerekli işlemlerin yapılmasını arz ederim.\n\nBilgilerinize arz ederim.\n\nSaygılarımla,\n\nİsim Soyisim: ${name}\nİmza:         ${".".repeat(30)}`;
+      currentLetter = text;
+      const output = document.getElementById("output");
+      output.textContent = text;
+      output.style.display = "block";
+      document.getElementById("downloadButtons").style.display = "flex";
+    }
+    async function downloadWord() {
+      const { Document, Packer, Paragraph } = window.docx;
+      const paragraphs = currentLetter.split("\n\n").map(block => new Paragraph(block));
+      const doc = new Document({ sections: [{ properties: {}, children: paragraphs }] });
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "istifa_dilekcesi.docx";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const lines = doc.splitTextToSize(currentLetter, 180);
+      doc.setFont("Times", "");
+      doc.setFontSize(12);
+      doc.text(lines, 15, 20);
+      doc.save("istifa_dilekcesi.pdf");
+    }
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+    }
+  </script>
+</body>
+</html>
